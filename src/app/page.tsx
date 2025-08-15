@@ -1,4 +1,7 @@
-import css from './page.module.css';
+import { redirect } from 'next/navigation';
+
 export default function Home() {
-    return <div className={css.redfont}>Hello World</div>;
+    redirect('/search');
 }
+
+

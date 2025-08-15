@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './bootstrap.scss';
 import './global.css';
-
+import './style.css';
+import BootstrapClient from './BootstrapClient';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -17,7 +18,8 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className} data-bs-theme="dark">
+            <body className={inter.className}>
+                <BootstrapClient />
                 {children}
             </body>
         </html>

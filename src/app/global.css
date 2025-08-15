@@ -46,3 +46,9 @@ a {
         color: yellow;
     }
 }
+
+/* App-wide container to match 1440px layout like arealty_new_html */
+.app-container {
+    margin: 0 auto;
+    max-width: 1440px;
+}
