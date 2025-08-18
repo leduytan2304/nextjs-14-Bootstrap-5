@@ -1,55 +1,35 @@
+
 "use client";
-import React, { useState, useEffect } from 'react';
-import { prefectureService } from '@/app/api/prefectureService';
-import { Prefecture, RegionGroup } from '@/types/prefecture';
-import { regionGroupData } from '@/types/prefecture';
+import React from 'react';
+import { RegionGroup, regionGroupData } from '@/types/prefecture';
+import { RegionTotalRoom } from '@/types/room';
+import { City } from '@/app/api/cityService';
+import { PrefectureTotalRoom } from '@/hooks/usePrefectureData';
 
-export default function List() {
-  const [regions, setRegions] = useState<RegionGroup[]>([]);
+interface ListProps {
+  regionTotals: RegionTotalRoom[];
+  count_prefecture: number;
+  regionPrefectures: Map<number, PrefectureTotalRoom[]>;
+  cities: City[];
+  selectedPrefectureId: number | null;
+  selectedRegion: RegionGroup | null;
+  setSelectedRegion: (region: RegionGroup | null) => void;
+  handlePrefectureSelect: (prefecture: PrefectureTotalRoom) => Promise<void>;
+  onSelectCity?: (cityName: string | null) => void;
+}
 
-    useEffect(() => {
-      const fetchAndUpdateRegionGroups = async () => {
-        try {
-          // 1. Fetch danh sách prefectures từ API
-          const response = await prefectureService.getAll();
-        
-  
-          // 2. Đảm bảo response.data là mảng
-          const prefectures: Prefecture[] = Array.isArray(response?.data)
-            ? response.data
-            : Array.isArray(response)
-              ? response
-              : [];
-  
-          console.log("Prefectures từ API:", prefectures.map(p => p._id));
-  
-          // 3. Tạo Map để tra cứu nhanh theo _id
-          const prefectureMap = new Map<number, Prefecture>();
-          for (const p of prefectures) {
-            prefectureMap.set(p._id, p);
-          }
-          console.log("Prefecture Map Keys:", Array.from(prefectureMap.keys()));
-  
-          // 4. Cập nhật trực tiếp regionGroupData chỉ lưu _id
-          const updatedRegions = regionGroupData.map(region => ({
-            ...region,
-            prefectures: region.ids.filter(id => prefectureMap.has(id)),
-          }));
-  
-          console.log("regionGroupData sau khi cập nhật:", updatedRegions.map(r => ({
-            _id: r._id,
-            prefectures: r.prefectures
-          })));
-  
-          setRegions(updatedRegions);
-        } catch (error) {
-          console.error("Lỗi khi fetch hoặc cập nhật regionGroupData:", error);
-          setRegions(regionGroupData); // fallback
-        }
-      };
-  
-      fetchAndUpdateRegionGroups();
-    }, []);
+export default function List({
+  regionTotals,
+  count_prefecture,
+  regionPrefectures,
+  cities,
+  selectedPrefectureId,
+  selectedRegion,
+  setSelectedRegion,
+  handlePrefectureSelect,
+  onSelectCity
+}: ListProps) {
+
   return (
     <div>
       {/* Wrap search */}
@@ -79,36 +59,67 @@ export default function List() {
               <div className="d-flex pd-1 g-1 bg-grey r-8">
                 <div className="d-flex flex-column bg-white pd-05 r-8 tab-size g-05">
                   <div className="d-flex flex-column g-05">
-                      {regions.map((region) => (
-                    <div className="d-flex align-items-center pd-05 g-05 area">
-                      <img src="https://arealty.jp/content/images/pft/aichi.png" alt="" />
-                      <div className="d-flex flex-column flex-grow-1">
-                        <strong>{region.title.en}</strong>
-                        <span className="text-grey fs-03-08 t-n-wrap">
-                          7512 results
-                        </span>
+                      {regionGroupData.map((region) => (
+                    <div key={region._id}>
+                      {/* Region header */}
+                      <div 
+                        className={`d-flex align-items-center pd-05 g-05 area ${
+                          selectedRegion?._id === region._id ? 'active' : ''
+                        }`}
+                        onClick={() => setSelectedRegion(
+                          selectedRegion?._id === region._id ? null : region
+                        )}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <img src="https://arealty.jp/content/images/pft/aichi.png" alt="" />
+                        <div className="d-flex flex-column flex-grow-1">
+                          <strong>{region.title.en}</strong>
+                          <span className="text-grey fs-03-08 t-n-wrap">
+                            {regionTotals.find(r => r._id === region._id)?.totalRoom} results
+                          </span>
+                        </div>
+                        <div>
+                          <i className={`icon-arrow ${
+                            selectedRegion?._id === region._id ? 'rotate-180' : ''
+                          }`}></i>
+                        </div>
                       </div>
-                      <div>
-                        <i className="icon-arrow"></i>
-                      </div>
+                      {selectedRegion?._id === region._id && (
+                        <div className="d-flex flex-column" style={{ paddingLeft: '20px' }}>
+                          {regionPrefectures.get(region._id)?.map((prefecture) => (
+                            <div key={prefecture._id}>
+                              <label 
+                                className="form-check-label item"
+                                onClick={() => handlePrefectureSelect(prefecture)}
+                              >
+                                <input 
+                                  className="form-check-input" 
+                                  type="radio"
+                                  name="prefecture" 
+                                  checked={selectedPrefectureId === prefecture._id}
+                                  onChange={() => {}} // Để tránh warning controlled component
+                                />
+                                <span style={{ marginLeft: '8px' }}>
+                                  {prefecture.name}
+                                </span>
+                                <span className="text-grey">
+                                  ({prefecture.total_room})
+                                </span>
+                              </label>
+
+
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                       ))}
-                    <div className="d-flex flex-column">
-                      <label className="form-check-label item" htmlFor="">
-                        <input className="form-check-input" type="radio" />
-                        Aomori
-                      </label>
-                      <label className="form-check-label item" htmlFor="">
-                        <input className="form-check-input" type="radio" />
-                        Aomori
-                      </label>
-                    </div>
+                   
                   </div>
                 </div>
                 <div className="d-flex flex-column bg-white pd-05 r-8 g-05 tab-size">
                   <div className="w-7">Area</div>
                   <div
-                    // htmlFor="searchArea"
                     className="d-flex align-items-center pd-05 r-8 g-03 search-on-dropdown"
                   >
                     <div>
@@ -126,19 +137,29 @@ export default function List() {
                     </div>
                   </div>
                   <div className="d-flex flex-column">
-                    <label className="form-check-label item w-7" htmlFor="">
-                      <input className="form-check-input" type="checkbox" />
-                      Daita djvhdsvshhsvhhvhdvdbjvvbbvjvdfvidfiovo
-                      <span className="text-grey">(2530)</span>
-                    </label>
-                    <label className="form-check-label item w-7" htmlFor="">
-                      <input className="form-check-input" type="checkbox" />
-                      Daita <span className="text-grey">(2530)</span>
-                    </label>
-                    <label className="form-check-label item w-7" htmlFor="">
-                      <input className="form-check-input" type="checkbox" />
-                      Daita <span className="text-grey">(2530)</span>
-                    </label>
+                    {/* Hiển thị cities khi có prefecture được chọn */}
+                    {selectedPrefectureId && cities && cities.length > 0 ? (
+                      <div className="cities-list">
+                        {cities.map(city => (
+                          <div key={city._id} className="city-item">
+                            <label className="form-check-label">
+                              <input 
+                                type="radio" 
+                                name="city"
+                                className="form-check-input"
+                                onChange={() => onSelectCity?.(city.name)}
+                                onClick={() => onSelectCity?.(city.name)}
+                              />
+                              <span style={{ marginLeft:'8px'}}>
+                                {city.name}
+                              </span>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <></>
+                    )}
                   </div>
                 </div>
               </div>
@@ -387,9 +408,5 @@ export default function List() {
                 </div>
             </div> */}
       </div>
-
-    
-
-   
   );
 }

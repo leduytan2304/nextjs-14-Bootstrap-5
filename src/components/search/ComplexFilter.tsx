@@ -1,6 +1,13 @@
 import React from 'react';
+import { PrefectureTotalRoom } from '@/hooks/usePrefectureData';
 
-export default function ComplexFilter() {
+interface ComplexFilterProps {
+  selectedPrefectureId: number | null;
+  onSelectPrefecture: (prefectureId: number | null) => void;
+  regionPrefectures?: Map<number, PrefectureTotalRoom[]>;
+}
+
+export default function ComplexFilter({ selectedPrefectureId, onSelectPrefecture, regionPrefectures }: ComplexFilterProps) {
   return (
     <div>
       <div className="d-flex flex-column g-0">
@@ -13,6 +20,9 @@ export default function ComplexFilter() {
                 </div>
         <span className="text-grey">254 Results Found</span>
       </div>
+
+      {/* Prefecture quick select to trigger API */}
+     
 
       <div className="d-flex flex-column mgt-2">
         {/* Price */}

@@ -148,4 +148,7 @@ export interface Prefecture {
     _id: number;
     name: string;
     name_ja: string;
+    total_room: number | null;
 }
+
+

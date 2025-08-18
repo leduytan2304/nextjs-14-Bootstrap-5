@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const upstreamPaths: Record<string, string> = {
+    'prefectures': '/region/prefectures',
+    'get_room_number': '/api-background-process/get_room_number'
+};
+
 export async function GET(request: NextRequest) {
     try {
         const upstreamBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -13,6 +18,7 @@ export async function GET(request: NextRequest) {
         request.nextUrl.searchParams.forEach((value, key) => {
             upstreamUrl.searchParams.append(key, value);
         });
+        
 
         const upstreamResponse = await fetch(upstreamUrl.toString(), {
             method: 'GET',
